@@ -268,7 +268,7 @@ class AzureSearch(VectorStore):
             List[Document]: A list of documents that are most similar to the query text.
         """
         docs_and_scores = self.vector_search_with_score(
-            query, k=k, filters=kwargs.get("filters", None)
+            query, k=k, filters = ' and '.join(kwargs.get("filters", {}).values())
         )
         return [doc for doc, _ in docs_and_scores]
 
@@ -323,7 +323,7 @@ class AzureSearch(VectorStore):
             List[Document]: A list of documents that are most similar to the query text.
         """
         docs_and_scores = self.hybrid_search_with_score(
-            query, k=k, filters=kwargs.get("filters", None)
+            query, k=k, filters = ' and '.join(kwargs.get("filters", {}).values())
         )
         return [doc for doc, _ in docs_and_scores]
 
@@ -381,7 +381,7 @@ class AzureSearch(VectorStore):
             List[Document]: A list of documents that are most similar to the query text.
         """
         docs_and_scores = self.semantic_hybrid_search_with_score(
-            query, k=k, filters=kwargs.get("filters", None)
+            query, k=k, filters = ' and '.join(kwargs.get("filters", {}).values())
         )
         return [doc for doc, _ in docs_and_scores]
 
@@ -478,6 +478,7 @@ class AzureSearch(VectorStore):
 class AzureSearchVectorStoreRetriever(BaseRetriever, BaseModel):
     vectorstore: AzureSearch
     search_type: str = "hybrid"
+    filters: dict = None
     k: int = 4
 
     class Config:
@@ -501,11 +502,11 @@ class AzureSearchVectorStoreRetriever(BaseRetriever, BaseModel):
         run_manager: CallbackManagerForRetrieverRun,
     ) -> List[Document]:
         if self.search_type == "similarity":
-            docs = self.vectorstore.vector_search(query, k=self.k)
+            docs = self.vectorstore.vector_search(query, k=self.k, filters=self.filters)
         elif self.search_type == "hybrid":
-            docs = self.vectorstore.hybrid_search(query, k=self.k)
+            docs = self.vectorstore.hybrid_search(query, k=self.k, filters=self.filters)
         elif self.search_type == "semantic_hybrid":
-            docs = self.vectorstore.semantic_hybrid_search(query, k=self.k)
+            docs = self.vectorstore.semantic_hybrid_search(query, k=self.k, filters=self.filters)
         else:
             raise ValueError(f"search_type of {self.search_type} not allowed.")
         return docs
